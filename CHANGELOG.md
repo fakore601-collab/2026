@@ -4,6 +4,8 @@
 
 ### Stage 2
 
+- Added the missing web app icon in PNG and multi-resolution ICO formats, using the Android
+  launcher artwork so Trunk can resolve the icon referenced by `apps/wordcraft-web/index.html`.
 - Added a manually triggered keystore-generation workflow that uploads a short-lived,
   access-controlled setup artifact; signing values are masked from workflow logs.
 - Added optional release signing from GitHub Actions secrets, with a debug-signing fallback when
