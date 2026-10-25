@@ -69,7 +69,7 @@ def main() -> int:
     for line in log.splitlines():
         if line.startswith("@@COMMIT@@"):
             total_commits += 1
-            _, _commit_hash, name, email, date = line.split("\t", 4) if line.count("\t") >= 3 else (line, "", "", "", "")
+            _commit_hash, name, email, date = line.removeprefix("@@COMMIT@@").split("\t", 3)
             # Key by name (not email): the About window shows a GitHub-style "login", and most
             # people's git author name is close enough to their handle. Rename the key in the
             # JSON afterwards if you want it to exactly match your GitHub username.

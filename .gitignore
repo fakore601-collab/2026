@@ -15,3 +15,6 @@ apps/wordcraft-android/android/app/build/
 apps/wordcraft-android/android/.gradle/
 apps/wordcraft-android/android/local.properties
 *.apk
+*.jks
+*.keystore
+*-keystore-secrets.txt

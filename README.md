@@ -1,4 +1,16 @@
-# WordCraft — Android/Web only (trimmed)
+# أرض
+
+**المطوّر:** Zulfiqar Alhmood
+
+أرض تطبيق لمعالجة المستندات، مبني على WordCraft ومهيأ للويب وAndroid.
+
+## الأصل والإسناد
+
+أرض مبني على [WordCraft](https://github.com/storytold/wordcraft)، المرخّص بموجب MIT وApache-2.0.
+تظل إشعارات التراخيص والإسناد الأصلية محفوظة في `LICENSE-MIT` و`LICENSE-APACHE` و`NOTICE` و
+`ATTRIBUTION.md`.
+
+## About the upstream source
 
 This is a trimmed copy of WordCraft (<https://github.com/storytold/wordcraft>, MIT OR
 Apache-2.0) containing **only** what `apps/wordcraft-web` (and, through it, the Android app in
@@ -13,19 +25,33 @@ zotero, engine, ui-egui` — exactly the transitive dependency set of `wordcraft
 ## Build
 
 ```sh
-# 1. Build the WASM web app
-cd apps/wordcraft-web
-trunk build --release        # output: dist/web (relative to repo root)
-
-# 2. Sync into the Android (Capacitor) shell and build the APK
-cd ../wordcraft-android
+# 1. Install Capacitor assets needed by the web build
+cd apps/wordcraft-android
 npm install
+
+# 2. Build the WASM web app (output: dist/web relative to repo root)
+cd ../wordcraft-web
+trunk build --release
+
+# 3. Sync into the Android (Capacitor) shell and build the APK
+cd ../wordcraft-android
 npm run android:sync         # cap sync android
 npm run android:apk          # ./gradlew assembleDebug  (output under android/app/build/outputs/apk)
 ```
 
 You need: Rust with `wasm32-unknown-unknown`, [`trunk`](https://trunkrs.dev), Node.js, and an
 Android SDK (API 34) + JDK 17 for Gradle.
+
+## Build APK with GitHub Actions
+
+The `Android APK` workflow runs on pushes to `main` and can also be started manually with
+`workflow_dispatch`. In the repository's **Actions** tab, choose **Android APK**, select
+**Run workflow**, and confirm the `main` branch. When the run succeeds, open it, download the
+`Ard-debug` artifact, and extract the ZIP to get the APK.
+
+For signing a release APK so future updates can be installed over it, follow the tablet-friendly
+one-time setup in [docs/RELEASE.md](docs/RELEASE.md). Keep the generated signing key private and
+back it up securely; without its original key, future APKs cannot update that installation.
 
 ## Fixes applied versus the upstream file set
 
@@ -46,11 +72,8 @@ Android SDK (API 34) + JDK 17 for Gradle.
   unset (OEM-dependent default). Set it explicitly to `adjustResize` so the activity's window
   actually shrinks for the keyboard, matching the `100dvh` / `interactive-widget=resizes-content`
   behaviour `index.html` already assumes.
-- **Leftover template package name.** The test sources under `android/app/src/test` and
-  `androidTest` were still in `com.getcapacitor.myapp` and the instrumented test asserted the
-  package name was `com.getcapacitor.app` — both stale from the original Capacitor scaffold and
-  inconsistent with the real `applicationId`, `com.wordcraft.app`. Moved the files to
-  `com.wordcraft.app` and fixed the assertion (it would have failed otherwise).
+- **Android package name.** The activity and test sources now use `com.zulfiqar.ard`, matching
+  both the Gradle namespace and `applicationId`; the manifest names the activity explicitly.
 
 ## Still worth doing (not mechanical — real engine/UX work, left for you to scope)
 
@@ -67,14 +90,11 @@ Android SDK (API 34) + JDK 17 for Gradle.
 - **Custom launcher icon / splash** — still the generic Capacitor-template assets under
   `res/mipmap-*` and `res/drawable*/splash.png`.
 
-## Crediting yourself
+## Contributors
 
-See `contributors/contributors_gen.py` — it reads **this repo's own `git log`** (once you've
-committed to your fork under your own `git config user.name`) and writes
-`contributors/contributors.json` in the schema `crates/ui-egui/build.rs` expects for the in-app
-About window. It will not invent a name for you; only commits that actually exist get listed.
-After generating it, add your display name to `contributors/people.toml` (see that file's header)
-and flip your entry's `"people_entry"` to `true` in `contributors.json`.
+`contributors/contributors.json` supplies commit statistics to the in-app contributors view;
+`contributors/people.toml` supplies verified display names. Zulfiqar Alhmood is listed for the
+Android and Arabic app modifications in this repository.
 
 Per the MIT/Apache-2.0 licence this is built on, keep `LICENSE-MIT`, `LICENSE-APACHE`, `NOTICE`
 and `ATTRIBUTION.md` in place — they record the original project's copyright and the licences of

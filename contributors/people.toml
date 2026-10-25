@@ -20,3 +20,8 @@
 # [people.Jane Example]
 # real_name = "Jane Example"
 # display_name = "Jane"
+
+[people."ZULFIQAR AL-HAMMOOD"]
+real_name = "Zulfiqar Alhmood"
+display_name = "Zulfiqar Alhmood"
+sync_github_name = false

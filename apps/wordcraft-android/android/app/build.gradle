@@ -1,13 +1,21 @@
 apply plugin: 'com.android.application'
 
+def releaseSigning = [
+    keystorePath: System.getenv('KEYSTORE_PATH'),
+    keystorePassword: System.getenv('KEYSTORE_PASSWORD'),
+    keyAlias: System.getenv('KEY_ALIAS'),
+    keyPassword: System.getenv('KEY_PASSWORD')
+]
+def hasReleaseSigning = releaseSigning.values().every { it }
+
 android {
-    namespace "com.wordcraft.app"
+    namespace "com.zulfiqar.ard"
     compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.wordcraft.app"
+        applicationId "com.zulfiqar.ard"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
+        versionCode (System.getenv('ANDROID_VERSION_CODE') ?: '1').toInteger()
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
@@ -16,11 +24,22 @@ android {
             ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        release {
+            if (hasReleaseSigning) {
+               storeFile file(releaseSigning.keystorePath)
+               storePassword releaseSigning.keystorePassword
+               keyAlias releaseSigning.keyAlias
+               keyPassword releaseSigning.keyPassword
+            }
+        }
+    }
     buildTypes {
         release {
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig hasReleaseSigning ? signingConfigs.release : signingConfigs.debug
         }
     }
 }
