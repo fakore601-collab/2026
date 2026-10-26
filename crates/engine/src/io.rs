@@ -583,6 +583,50 @@ pub fn save_path_with(path: &std::path::Path, _doc: &Document, _password: Option
     Err(format!("{}: files are saved through the browser on the web", path.display()))
 }
 
+/// Save a document atomically, preserving a `.bak` backup copy of any previous version.
+#[cfg(not(target_arch = "wasm32"))]
+pub fn save_path_atomic_with_backup(path: &std::path::Path, doc: &Document, password: Option<&str>, opts: &ExportOptions) -> Result<(), String> {
+    crate::file_access::check_write(&path.to_string_lossy())?;
+    let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("docx");
+    let bak_path = path.with_extension(format!("{ext}.bak"));
+    if path.is_file() {
+        let _ = std::fs::copy(path, &bak_path);
+    }
+    let bytes = save_bytes_with(&path.to_string_lossy(), doc, password, opts)?;
+    safe_save::write(path, &bytes).map_err(|e| format!("{}: {e}", path.display()))
+}
+
+#[cfg(target_arch = "wasm32")]
+pub fn save_path_atomic_with_backup(_path: &std::path::Path, _doc: &Document, _password: Option<&str>, _opts: &ExportOptions) -> Result<(), String> {
+    Err("files are saved through the browser/Capacitor on the web".into())
+}
+
+/// Open a document with automatic fallback to its `.bak` backup if the primary file is corrupted.
+/// Returns `(Document, is_backup_restored)`.
+#[cfg(not(target_arch = "wasm32"))]
+pub fn open_path_with_backup_recovery(path: &std::path::Path, password: Option<&str>) -> Result<(Document, bool), String> {
+    match open_path_with(path, password) {
+        Ok((doc, _)) => Ok((doc, false)),
+        Err(primary_err) => {
+            let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("docx");
+            let bak_path = path.with_extension(format!("{ext}.bak"));
+            if bak_path.is_file() {
+                match open_path_with(&bak_path, password) {
+                    Ok((doc, _)) => Ok((doc, true)),
+                    Err(bak_err) => Err(format!("Primary corrupted ({primary_err}), backup also invalid ({bak_err})")),
+                }
+            } else {
+                Err(format!("File corrupted ({primary_err}) and no backup available"))
+            }
+        }
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
+pub fn open_path_with_backup_recovery(_path: &std::path::Path, _password: Option<&str>) -> Result<(Document, bool), String> {
+    Err("files are opened through the browser/Capacitor on the web".into())
+}
+
 /// Decode text bytes: UTF-8 (with or without BOM), UTF-16 LE/BE (BOM or sniffed), else the
 /// legacy encoding they look like — GBK, Big5, Shift_JIS, Windows-1252… (see
 /// [`wordcraft_formats::txt::decode`]).

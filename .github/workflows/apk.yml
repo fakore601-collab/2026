@@ -7,7 +7,7 @@ on:
       - main
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -23,6 +23,9 @@ jobs:
 
       - name: Cache Rust build
         uses: Swatinem/rust-cache@v2
+
+      - name: Run unit tests
+        run: cargo test --workspace --exclude wordcraft-web
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -54,6 +57,9 @@ jobs:
       - name: Sync Capacitor Android project
         working-directory: apps/wordcraft-android
         run: npm run android:sync
+
+      - name: Ensure Gradle wrapper is executable
+        run: chmod +x apps/wordcraft-android/android/gradlew
 
       - name: Build debug APK
         working-directory: apps/wordcraft-android
@@ -122,3 +128,35 @@ jobs:
           name: Ard-release
           path: apps/wordcraft-android/android/app/build/outputs/apk/release/Ard-release.apk
           if-no-files-found: error
+
+      - name: Select APK for Release
+        id: release_asset
+        run: |
+          if [ -f apps/wordcraft-android/android/app/build/outputs/apk/release/Ard-release.apk ]; then
+            echo "path=apps/wordcraft-android/android/app/build/outputs/apk/release/Ard-release.apk" >> "$GITHUB_OUTPUT"
+            echo "name=Ard-release.apk" >> "$GITHUB_OUTPUT"
+          else
+            DEBUG_APK=$(ls apps/wordcraft-android/android/app/build/outputs/apk/debug/*.apk | head -n 1)
+            cp "$DEBUG_APK" apps/wordcraft-android/android/app/build/outputs/apk/debug/Ard-debug.apk
+            echo "path=apps/wordcraft-android/android/app/build/outputs/apk/debug/Ard-debug.apk" >> "$GITHUB_OUTPUT"
+            echo "name=Ard-debug.apk" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: أرض v1.0.${{ github.run_number }}
+          draft: false
+          prerelease: false
+          files: ${{ steps.release_asset.outputs.path }}
+          body: |
+            ## تطبيق أرض (Ard) — الإصدار v1.0.${{ github.run_number }}
+            
+            ### المميزات في هذا الإصدار:
+            - **حفظ تلقائي ذكي**: حفظ بعد 3 ثوانٍ من آخر تعديل، وفوراً عند الانتقال للخلفية (`pause` / `visibilitychange`) وقبل الخروج.
+            - **تخزين دائم ذري**: كتابة الملفات بآلية ذرية في مساحة التطبيق مع إنشاء نسخة احتياطية `.bak` تلقائياً واسترجاعها في حال تلف الملف.
+            - **استرجاع تلقائي**: فتح آخر مستند تلقائياً مع تنبيه "تم استرجاع عملك" بعد أي إغلاق غير سليم.
+            - **شاشة إدارة المستندات**: قائمة بالمستندات المحفوظة بتاريخ التعديل وحجم الملف، إنشاء جديد، فتح، إعادة تسمية، وحذف بتأكيد.
+            - **مشاركة وتصدير**: تصدير ومشاركة المستندات بصيغتي DOCX و PDF عبر أندرويد.
+            - **دعم زر الرجوع**: إغلاق القوائم والنوافذ أولاً، ثم الحفظ والرجوع لقائمة المستندات، ثم الخروج بأمان.
