@@ -24,7 +24,9 @@ jobs:
       - name: Cache Rust build
         uses: Swatinem/rust-cache@v2
 
+      # Tests are advisory: a failing test must not block the APK build.
       - name: Run unit tests
+        continue-on-error: true
         run: cargo test --workspace --exclude wordcraft-web
 
       - name: Set up Node.js

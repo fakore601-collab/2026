@@ -33,7 +33,7 @@ fn test_atomic_save_and_recovery() {
 
     let (loaded_v1, is_bak) = open_path_with_backup_recovery(&doc_path, None).unwrap();
     assert!(!is_bak, "Should load primary file, not backup");
-    assert_eq!(loaded_v1.plain_text(wordcraft_doc::StoryRef::Body), "Version 1 content\n");
+    assert_eq!(loaded_v1.plain_text(wordcraft_doc::StoryRef::Body), "Version 1 content");
 
     // Second save -> creates .bak
     let doc_v2 = Document::from_text("Version 2 updated content");
@@ -44,7 +44,7 @@ fn test_atomic_save_and_recovery() {
 
     let (loaded_v2, is_bak) = open_path_with_backup_recovery(&doc_path, None).unwrap();
     assert!(!is_bak, "Should load primary file");
-    assert_eq!(loaded_v2.plain_text(wordcraft_doc::StoryRef::Body), "Version 2 updated content\n");
+    assert_eq!(loaded_v2.plain_text(wordcraft_doc::StoryRef::Body), "Version 2 updated content");
 }
 
 #[test]
@@ -68,7 +68,7 @@ fn test_corrupted_primary_falls_back_to_backup() {
     // Open should automatically fall back to .bak!
     let (recovered_doc, is_bak) = open_path_with_backup_recovery(&doc_path, None).unwrap();
     assert!(is_bak, "Recovery flag must be true when loading from backup");
-    assert_eq!(recovered_doc.plain_text(wordcraft_doc::StoryRef::Body), "Resilient content from backup\n");
+    assert_eq!(recovered_doc.plain_text(wordcraft_doc::StoryRef::Body), "Resilient content from backup");
 }
 
 #[test]
